@@ -20,12 +20,12 @@ use bevy_transform::components::Transform;
 
 /// Physics plugin for singleplayer games
 #[cfg(feature = "singleplayer")]
-pub struct RRectPhysicsPlugin {
+pub struct PvwRRectPhysicsPlugin {
     pub spatial_grid_size: f32,
 }
 
 #[cfg(feature = "singleplayer")]
-impl Default for RRectPhysicsPlugin {
+impl Default for PvwRRectPhysicsPlugin {
     fn default() -> Self {
         Self {
             spatial_grid_size: SpatialHashGrid::DEFAULT_CELL_SIZE,
@@ -34,7 +34,7 @@ impl Default for RRectPhysicsPlugin {
 }
 
 #[cfg(feature = "singleplayer")]
-impl Plugin for RRectPhysicsPlugin {
+impl Plugin for PvwRRectPhysicsPlugin {
     fn build(&self, app: &mut App) {
         #[cfg(feature = "reflect")]
         app.add_plugins(type_registry);
@@ -61,10 +61,10 @@ impl Plugin for RRectPhysicsPlugin {
 
 /// Physics plugin for multiplayer games on client side
 #[cfg(feature = "client")]
-pub struct RRectPhysicsPluginClient;
+pub struct PvwRRectPhysicsPluginClient;
 
 #[cfg(feature = "client")]
-impl Plugin for RRectPhysicsPluginClient {
+impl Plugin for PvwRRectPhysicsPluginClient {
     fn build(&self, app: &mut App) {
         #[cfg(feature = "reflect")]
         app.add_plugins(type_registry);
@@ -76,12 +76,12 @@ impl Plugin for RRectPhysicsPluginClient {
 
 /// Physics plugin for multiplayer games on client side
 #[cfg(feature = "server")]
-pub struct RRectPhysicsPluginServer {
+pub struct PvwRRectPhysicsPluginServer {
     pub spatial_grid_size: f32,
 }
 
 #[cfg(feature = "server")]
-impl Default for RRectPhysicsPluginServer {
+impl Default for PvwRRectPhysicsPluginServer {
     fn default() -> Self {
         Self {
             spatial_grid_size: SpatialHashGrid::DEFAULT_CELL_SIZE,
@@ -90,7 +90,7 @@ impl Default for RRectPhysicsPluginServer {
 }
 
 #[cfg(feature = "server")]
-impl Plugin for RRectPhysicsPluginServer {
+impl Plugin for PvwRRectPhysicsPluginServer {
     fn build(&self, app: &mut App) {
         #[cfg(feature = "reflect")]
         app.add_plugins(type_registry);

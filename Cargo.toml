@@ -1,5 +1,5 @@
 [package]
-name = "rrect_physics"
+name = "pvw_rrect_physics"
 version = "0.1.0"
 edition = "2024"
 authors = ["Team Injured Elbow"]
