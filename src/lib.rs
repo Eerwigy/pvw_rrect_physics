@@ -18,8 +18,8 @@ use bevy_time::prelude::*;
 #[cfg(feature = "render")]
 use bevy_transform::components::Transform;
 
-#[cfg(feature = "singleplayer")]
 /// Physics plugin for singleplayer games
+#[cfg(feature = "singleplayer")]
 pub struct RRectPhysicsPlugin {
     pub spatial_grid_size: f32,
 }
@@ -56,6 +56,59 @@ impl Plugin for RRectPhysicsPlugin {
         );
         app.add_systems(Update, update_translation);
         app.add_systems(PostUpdate, translation_just_added);
+    }
+}
+
+/// Physics plugin for multiplayer games on client side
+#[cfg(feature = "client")]
+pub struct RRectPhysicsPluginClient;
+
+#[cfg(feature = "client")]
+impl Plugin for RRectPhysicsPluginClient {
+    fn build(&self, app: &mut App) {
+        #[cfg(feature = "reflect")]
+        app.add_plugins(type_registry);
+        app.init_resource::<TileSize>();
+        app.add_systems(Update, update_translation);
+        app.add_systems(PostUpdate, translation_just_added);
+    }
+}
+
+/// Physics plugin for multiplayer games on client side
+#[cfg(feature = "server")]
+pub struct RRectPhysicsPluginServer {
+    pub spatial_grid_size: f32,
+}
+
+#[cfg(feature = "server")]
+impl Default for RRectPhysicsPluginServer {
+    fn default() -> Self {
+        Self {
+            spatial_grid_size: SpatialHashGrid::DEFAULT_CELL_SIZE,
+        }
+    }
+}
+
+#[cfg(feature = "server")]
+impl Plugin for RRectPhysicsPluginServer {
+    fn build(&self, app: &mut App) {
+        #[cfg(feature = "reflect")]
+        app.add_plugins(type_registry);
+        app.insert_resource(SpatialHashGrid {
+            cell_size: self.spatial_grid_size,
+            ..Default::default()
+        });
+        app.configure_sets(FixedUpdate, PhysicsSystems);
+        app.add_systems(
+            FixedUpdate,
+            (
+                update_velocity_and_predict,
+                update_spatial_hash_grid,
+                check_collisions_and_resolve,
+            )
+                .chain()
+                .in_set(PhysicsSystems),
+        );
     }
 }
 
