@@ -4,8 +4,9 @@ use bevy_math::prelude::*;
 use bevy_platform::collections::{HashMap, HashSet};
 use bevy_reflect::prelude::*;
 
-#[derive(Resource, Reflect)]
-#[reflect(Resource)]
+#[derive(Resource)]
+#[cfg_attr(feature = "reflect", derive(Reflect))]
+#[cfg_attr(feature = "reflect", reflect(Resource))]
 pub struct SpatialHashGrid {
     pub(crate) cell_size: f32,
     pub(crate) grid_to_ent: HashMap<IVec2, HashSet<Entity>>,
@@ -83,16 +84,16 @@ impl SpatialHashGrid {
                     match self.grid_to_ent.get(grid) {
                         Some(ent_set) => {
                             entities.extend(ent_set);
-                        }
+                        },
 
                         None => {
                             return None;
-                        }
+                        },
                     }
                 }
 
                 Some(entities)
-            }
+            },
 
             None => None,
         }

@@ -8,15 +8,22 @@ pub use spatial_grid::SpatialHashGrid;
 
 use bevy_app::prelude::*;
 use bevy_ecs::prelude::*;
+#[cfg(feature = "physics")]
 use bevy_math::prelude::*;
+#[cfg(feature = "physics")]
 use bevy_platform::collections::{HashMap, HashSet};
+#[cfg(feature = "physics")]
 use bevy_time::prelude::*;
+#[cfg(feature = "render")]
+use bevy_transform::components::Transform;
 
+#[cfg(feature = "singleplayer")]
 /// Physics plugin for singleplayer games
 pub struct RRectPhysicsPlugin {
     pub spatial_grid_size: f32,
 }
 
+#[cfg(feature = "singleplayer")]
 impl Default for RRectPhysicsPlugin {
     fn default() -> Self {
         Self {
@@ -25,6 +32,7 @@ impl Default for RRectPhysicsPlugin {
     }
 }
 
+#[cfg(feature = "singleplayer")]
 impl Plugin for RRectPhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Position>();
@@ -32,6 +40,7 @@ impl Plugin for RRectPhysicsPlugin {
         app.register_type::<Collider>();
         app.register_type::<ColliderType>();
         app.register_type::<Force>();
+        app.init_resource::<TileSize>();
         app.insert_resource(SpatialHashGrid {
             cell_size: self.spatial_grid_size,
             ..Default::default()
@@ -47,15 +56,46 @@ impl Plugin for RRectPhysicsPlugin {
                 .chain()
                 .in_set(PhysicsSystems),
         );
+        app.add_systems(Update, update_translation);
+        app.add_systems(PostUpdate, translation_just_added);
     }
 }
 
+#[cfg(feature = "render")]
+#[derive(Debug, Resource, Clone, Copy)]
+pub struct TileSize(f32, Vec2);
+
+#[cfg(feature = "render")]
+impl Default for TileSize {
+    fn default() -> Self {
+        Self::new(8.0)
+    }
+}
+
+#[cfg(feature = "render")]
+impl TileSize {
+    pub fn new(size: f32) -> Self {
+        Self(size, Vec2::splat(size))
+    }
+
+    pub fn size(&self) -> f32 {
+        self.0
+    }
+
+    pub fn vec(&self) -> Vec2 {
+        self.1
+    }
+}
+
+#[cfg(feature = "physics")]
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 struct PhysicsSystems;
 
+#[cfg(feature = "physics")]
 #[derive(Message)]
-pub struct CollisionMessage(Entity, Entity);
+pub struct CollisionMessage(pub Entity, pub Entity);
 
+#[cfg(feature = "physics")]
 fn update_velocity_and_predict(
     mut query: Query<(&mut Movement, &mut Position)>,
     time: Res<Time<Fixed>>,
@@ -76,6 +116,7 @@ fn update_velocity_and_predict(
     }
 }
 
+#[cfg(feature = "physics")]
 fn update_spatial_hash_grid(
     mut spatial_grid: ResMut<SpatialHashGrid>,
     query: Query<(Entity, &Position, &Collider)>,
@@ -98,6 +139,7 @@ fn update_spatial_hash_grid(
     }
 }
 
+#[cfg(feature = "physics")]
 fn check_collisions_and_resolve(
     mut messages: MessageWriter<CollisionMessage>,
     mut query: Query<(&mut Position, &Collider, Entity)>,
@@ -189,12 +231,13 @@ fn check_collisions_and_resolve(
 
             messages.write(CollisionMessage(entity_a, entity_b));
 
-            // resolve collision by pushing one of the collider away
             match (collider_a.ctype, collider_b.ctype) {
+                // resolve collision by pushing one of the collider away
                 (ColliderType::Dynamic(_), ColliderType::Static) => {
                     *dynamic_positions.entry(entity_a).or_insert(pos_a.0) -= mtv;
-                }
+                },
 
+                // in this case we push both away based on their masses
                 (ColliderType::Dynamic(mass_a), ColliderType::Dynamic(mass_b)) => {
                     let total_mass = mass_a + mass_b;
                     let mass_share_a = mass_a / total_mass;
@@ -202,8 +245,8 @@ fn check_collisions_and_resolve(
 
                     *dynamic_positions.entry(entity_a).or_insert(pos_a.0) -= mtv * mass_share_b;
                     *dynamic_positions.entry(entity_b).or_insert(pos_b.0) += mtv * mass_share_a;
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }
@@ -215,22 +258,23 @@ fn check_collisions_and_resolve(
     }
 }
 
-// fn translation_just_added(
-//     mut query: Query<(&mut Transform, &Position), Or<(Added<Transform>, Added<Position>)>>,
-// ) {
-//     for (mut transf, pos) in &mut query {
-//         transf.translation = vec3(
-//             pos.0.x * TILE_SIZE,
-//             pos.0.y * TILE_SIZE,
-//             transf.translation.z,
-//         );
-//     }
-// }
+#[cfg(feature = "render")]
+fn translation_just_added(
+    mut query: Query<(&mut Transform, &Position), Or<(Added<Transform>, Added<Position>)>>,
+    tile_size: Res<TileSize>,
+) {
+    let size = tile_size.size();
+    for (mut transf, pos) in &mut query {
+        transf.translation = vec3(pos.0.x * size, pos.0.y * size, transf.translation.z);
+    }
+}
 
-// fn update_translation(mut query: Query<(&mut Transform, &Position)>) {
-//     for (mut transform, pos) in &mut query {
-//         let z_index = transform.translation.z;
-//         let temp = Vec3::new(pos.0.x * TILE_SIZE, pos.0.y * TILE_SIZE, z_index);
-//         transform.translation = transform.translation.lerp(temp, 0.2);
-//     }
-// }
+#[cfg(feature = "render")]
+fn update_translation(mut query: Query<(&mut Transform, &Position)>, tile_size: Res<TileSize>) {
+    let size = tile_size.size();
+    for (mut transform, pos) in &mut query {
+        let z_index = transform.translation.z;
+        let temp = Vec3::new(pos.0.x * size, pos.0.y * size, z_index);
+        transform.translation = transform.translation.lerp(temp, 0.2);
+    }
+}

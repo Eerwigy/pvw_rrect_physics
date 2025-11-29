@@ -8,17 +8,20 @@ description = "An axis-aligned rounded rectangle physics implementation for the 
 [dependencies]
 bevy_app = "0.17"
 bevy_ecs = "0.17"
-bevy_math = { version = "0.17", features = ["bevy_reflect", "serialize"] }
-bevy_platform = "0.17"
+bevy_math = "0.17"
+bevy_platform = { version = "0.17", optional = true }
 bevy_reflect = { version = "0.17", optional = true }
-bevy_time = "0.17"
+bevy_time = { version = "0.17", optional = true }
+bevy_transform = { version = "0.17", optional = true }
 serde = { version = "1.0", optional = true }
 
 [features]
 default = ["serialize", "singleplayer", "reflect"]
-serialize = ["serde"]
-reflect = ["bevy_reflect"]
-singleplayer = []
+serialize = ["serde", "bevy_math/serialize"]
+reflect = ["bevy_reflect", "bevy_math/bevy_reflect"]
+singleplayer = ["render", "physics"]
 multiplayer = ["client", "server"]
-client = ["serialize"]
-server = ["serialize"]
+client = ["serialize", "render"]
+server = ["serialize", "physics"]
+render = ["bevy_transform"]
+physics = ["bevy_platform", "bevy_time"]
