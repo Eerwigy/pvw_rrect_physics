@@ -154,7 +154,7 @@ impl TileSize {
 struct PhysicsSystems;
 
 #[cfg(feature = "physics")]
-#[derive(Message)]
+#[derive(Message, Event, Debug)]
 pub struct CollisionMessage(pub Entity, pub Entity);
 
 #[cfg(feature = "physics")]
@@ -230,11 +230,11 @@ fn check_collisions_and_resolve(
             continue;
         };
 
-        for &entity_b in neighbors.iter() {
-            let Some(&(mut pos_b, collider_b)) = detection_data.get(&entity_b) else {
-                continue;
-            };
+        if let Some(pos) = dynamic_positions.get(&entity_a) {
+            pos_a.0 = *pos;
+        }
 
+        for &entity_b in neighbors.iter() {
             if entity_a == entity_b {
                 continue;
             }
@@ -249,12 +249,12 @@ fn check_collisions_and_resolve(
                 continue;
             }
 
-            if let Some(pos) = dynamic_positions.get(&entity_a) {
-                pos_a.0 += pos;
-            }
+            let Some(&(mut pos_b, collider_b)) = detection_data.get(&entity_b) else {
+                continue;
+            };
 
             if let Some(pos) = dynamic_positions.get(&entity_b) {
-                pos_b.0 += pos;
+                pos_b.0 = *pos;
             }
 
             let offset = pos_b.0 - pos_a.0;
