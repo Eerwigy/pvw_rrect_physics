@@ -352,10 +352,8 @@ fn translation_just_added(
 #[cfg(feature = "render")]
 fn update_translation(mut query: Query<(&mut Transform, &Position)>, tile_size: Res<TileSize>) {
     let size = tile_size.size();
-    for (mut transform, pos) in &mut query {
-        let z_index = transform.translation.z;
-        let temp = Vec3::new(pos.0.x * size, pos.0.y * size, z_index);
-        transform.translation = transform.translation.lerp(temp, 0.2);
+    for (mut transf, pos) in &mut query {
+        transf.translation = vec3(pos.0.x * size, pos.0.y * size, transf.translation.z);
     }
 }
 
