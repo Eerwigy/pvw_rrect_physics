@@ -13,7 +13,7 @@ fn main() -> AppExit {
     app.add_systems(
         Update,
         (
-            player_movement,
+            player_movement.run_if(resource_changed::<ButtonInput<KeyCode>>),
             message.run_if(on_message::<CollisionMessage>),
         ),
     );
@@ -103,8 +103,12 @@ fn player_movement(
     });
 }
 
-fn message(mut msgs: MessageReader<CollisionMessage>) {
+fn message(mut msgs: MessageReader<CollisionMessage>, query: Query<&Name>) {
     for m in msgs.read() {
-        println!("{:?}", m);
+        let Ok([n1, n2]) = query.get_many([m.0, m.1]) else {
+            continue;
+        };
+
+        println!("{} collided with {}", n1, n2);
     }
 }
