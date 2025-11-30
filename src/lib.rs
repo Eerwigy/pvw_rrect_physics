@@ -8,7 +8,11 @@ pub use components::{Collider, ColliderType, Force, Movement, PartialForce, Posi
 pub use spatial_grid::SpatialHashGrid;
 
 use bevy_app::prelude::*;
+#[cfg(feature = "gizmos")]
+use bevy_color::prelude::*;
 use bevy_ecs::prelude::*;
+#[cfg(feature = "gizmos")]
+use bevy_gizmos::prelude::*;
 #[cfg(feature = "physics")]
 use bevy_math::prelude::*;
 #[cfg(feature = "physics")]
@@ -55,7 +59,14 @@ impl Plugin for PvwRRectPhysicsPlugin {
                 .chain()
                 .in_set(PhysicsSystems),
         );
-        app.add_systems(Update, update_translation);
+        app.add_systems(
+            Update,
+            (
+                update_translation,
+                #[cfg(feature = "gizmos")]
+                draw_hitboxes,
+            ),
+        );
         app.add_systems(PostUpdate, translation_just_added);
     }
 }
@@ -70,7 +81,14 @@ impl Plugin for PvwRRectPhysicsPluginClient {
         #[cfg(feature = "reflect")]
         app.add_plugins(type_registry);
         app.init_resource::<TileSize>();
-        app.add_systems(Update, update_translation);
+        app.add_systems(
+            Update,
+            (
+                update_translation,
+                #[cfg(feature = "gizmos")]
+                draw_hitboxes,
+            ),
+        );
         app.add_systems(PostUpdate, translation_just_added);
     }
 }
@@ -338,5 +356,20 @@ fn update_translation(mut query: Query<(&mut Transform, &Position)>, tile_size: 
         let z_index = transform.translation.z;
         let temp = Vec3::new(pos.0.x * size, pos.0.y * size, z_index);
         transform.translation = transform.translation.lerp(temp, 0.2);
+    }
+}
+
+#[cfg(feature = "gizmos")]
+fn draw_hitboxes(
+    mut gizmos: Gizmos,
+    query: Query<(&Collider, &Position)>,
+    tile_size: Res<TileSize>,
+) {
+    let size = tile_size.size();
+    for (collider, pos) in &query {
+        const HITBOX_COLOR: Color = Color::srgb(0.0, 1.0, 0.0);
+        gizmos
+            .rounded_rect_2d(pos.0 * size, collider.size * size, HITBOX_COLOR)
+            .corner_radius(collider.radius * size);
     }
 }
