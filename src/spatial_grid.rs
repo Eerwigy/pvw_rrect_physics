@@ -55,11 +55,9 @@ impl SpatialHashGrid {
     }
 
     fn find_cells(&self, pos: &Position, coll: &Collider) -> HashSet<IVec2> {
-        let half_size = coll.size * 0.5;
-        let max_bounds = pos.0 + half_size;
-        let min_bounds = pos.0 - half_size;
-        let min_cell = (min_bounds / self.cell_size).floor().as_ivec2();
-        let max_cell = (max_bounds / self.cell_size).floor().as_ivec2();
+        let rect = Rect::from_center_size(pos.0, coll.size);
+        let min_cell = (rect.min / self.cell_size).floor().as_ivec2();
+        let max_cell = (rect.max / self.cell_size).floor().as_ivec2();
 
         let mut cells = HashSet::new();
 
