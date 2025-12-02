@@ -2,6 +2,7 @@ use crate::*;
 use bevy_ecs::prelude::*;
 use bevy_math::prelude::*;
 use bevy_platform::collections::{HashMap, HashSet};
+use tinyvec::TinyVec;
 
 #[derive(Resource)]
 pub struct SpatialHashGrid {
@@ -56,21 +57,21 @@ impl SpatialHashGrid {
         let min_cell = (rect.min / self.cell_size).floor().as_ivec2();
         let max_cell = (rect.max / self.cell_size).floor().as_ivec2();
 
-        let mut cells = HashSet::new();
+        let mut cells: TinyVec<[IVec2; 4]> = TinyVec::new();
 
         for x in min_cell.x..=max_cell.x {
             for y in min_cell.y..=max_cell.y {
-                cells.insert(IVec2::new(x, y));
+                cells.push(IVec2::new(x, y));
             }
         }
 
-        cells
+        cells.into_iter().collect()
     }
 
     pub(crate) fn iter(&self, ent: Entity) -> Option<HashSet<Entity>> {
         match self.ent_to_grid.get(&ent) {
             Some(grid_set) => {
-                let mut entities = HashSet::new();
+                let mut entities = Vec::new();
 
                 for grid in grid_set {
                     match self.grid_to_ent.get(grid) {
@@ -84,7 +85,7 @@ impl SpatialHashGrid {
                     }
                 }
 
-                Some(entities)
+                Some(entities.into_iter().collect())
             },
 
             None => None,
