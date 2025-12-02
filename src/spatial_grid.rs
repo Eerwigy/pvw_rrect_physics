@@ -2,11 +2,8 @@ use crate::*;
 use bevy_ecs::prelude::*;
 use bevy_math::prelude::*;
 use bevy_platform::collections::{HashMap, HashSet};
-use bevy_reflect::prelude::*;
 
 #[derive(Resource)]
-#[cfg_attr(feature = "reflect", derive(Reflect))]
-#[cfg_attr(feature = "reflect", reflect(Resource))]
 pub struct SpatialHashGrid {
     pub(crate) cell_size: f32,
     pub(crate) grid_to_ent: HashMap<IVec2, HashSet<Entity>>,
@@ -24,9 +21,9 @@ impl Default for SpatialHashGrid {
 }
 
 impl SpatialHashGrid {
-    pub const DEFAULT_CELL_SIZE: f32 = 20.0;
+    pub(crate) const DEFAULT_CELL_SIZE: f32 = 20.0;
 
-    pub fn insert_or_update(&mut self, ent: Entity, pos: &Position, coll: &Collider) {
+    pub(crate) fn insert_or_update(&mut self, ent: Entity, pos: &Position, coll: &Collider) {
         let cells = self.find_cells(pos, coll);
 
         let existing_cells = self.ent_to_grid.get(&ent).cloned().unwrap_or_default();
@@ -44,7 +41,7 @@ impl SpatialHashGrid {
         }
     }
 
-    pub fn remove(&mut self, ent: Entity) {
+    pub(crate) fn remove(&mut self, ent: Entity) {
         if let Some(grid_set) = self.ent_to_grid.remove(&ent) {
             for grid in grid_set {
                 if let Some(ent_set) = self.grid_to_ent.get_mut(&grid) {
@@ -70,7 +67,7 @@ impl SpatialHashGrid {
         cells
     }
 
-    pub fn iter(&self, ent: Entity) -> Option<HashSet<Entity>> {
+    pub(crate) fn iter(&self, ent: Entity) -> Option<HashSet<Entity>> {
         match self.ent_to_grid.get(&ent) {
             Some(grid_set) => {
                 let mut entities = HashSet::new();
