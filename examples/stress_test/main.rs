@@ -1,4 +1,8 @@
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::{
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    prelude::*,
+    window::PrimaryWindow,
+};
 use pvw_rrect_physics::*;
 use rand::Rng;
 
@@ -17,7 +21,8 @@ struct SpawnBob(Vec2);
 fn main() -> AppExit {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
-    // app.add_plugins(PvwRRectPhysicsPlugin::default());
+    app.add_plugins(FrameTimeDiagnosticsPlugin::default());
+    app.add_plugins(LogDiagnosticsPlugin::default());
     app.add_plugins(PvwRRectPhysicsPlugin {
         spatial_grid_size: 4.0, // Smaller grid size for more optimization
     });
@@ -88,8 +93,8 @@ fn spawn_bob(mut commands: Commands, mut events: MessageReader<SpawnBob>) {
         movement.apply_force(PartialForce {
             id: "main".to_string(),
             force: Some(vec2(
-                rng.random_range(-7.0..7.0), // Random velocity
-                rng.random_range(-7.0..7.0),
+                rng.random_range(-37.0..37.0), // Random velocity
+                rng.random_range(-37.0..37.0),
             )),
             active: Some(false),
         });
@@ -108,11 +113,5 @@ fn spawn_bob(mut commands: Commands, mut events: MessageReader<SpawnBob>) {
 }
 
 fn bob_collide(mut events: MessageReader<CollisionMessage>) {
-    let mut colls = 0_u32;
-
-    for _ in events.read() {
-        colls += 1;
-    }
-
-    println!("{} collisions detected", colls);
+    println!("{} collisions detected", events.read().len());
 }
