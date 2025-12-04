@@ -93,8 +93,8 @@ fn spawn_bob(mut commands: Commands, mut events: MessageReader<SpawnBob>) {
         movement.apply_force(PartialForce {
             id: "main".to_string(),
             force: Some(vec2(
-                rng.random_range(-37.0..37.0), // Random velocity
-                rng.random_range(-37.0..37.0),
+                rng.random_range(-7.0..7.0), // Random velocity
+                rng.random_range(-7.0..7.0),
             )),
             active: Some(false),
         });
